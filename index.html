@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="راسم الاهتزاز">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>راسم اهتزاز مهبطي — PhysicLabDZ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Tajawal:wght@400;700;900&display=swap');
+
+:root {
+  --bg:    #dce0e8;
+  --panel: #e8eaed;
+  --bezel: #f0f2f5;
+  --rim:   #c8ccd4;
+  --ph:    #00bb66;
+  --ph2:   #009955;
+  --amb:   #cc8800;
+  --red:   #dd3333;
+  --dim:   #888;
+  --txt:   #222;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  font-family: 'Tajawal', sans-serif;
+  color: var(--txt);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  background: #e0e4ea;
+  border-bottom: 1px solid #c0c4cc;
+  flex-shrink: 0;
+}
+.topbar-title { font-family:'Share Tech Mono',monospace; font-size:11px; color:#007744; letter-spacing:1px; }
+.topbar-sub   { font-family:'Share Tech Mono',monospace; font-size:10px; color:#999; }
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 5px 8px 6px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ══ ROW 1 — OSCILLOSCOPE ══ */
+.osc-row {
+  display: flex;
+  gap: 6px;
+  flex: 3;
+  min-height: 0;
+}
+
+/* Screen */
+.screen-wrap {
+  flex: 1;
+  background: #080808;
+  border-radius: 10px;
+  border: 3px solid #aab0bc;
+  padding: 5px;
+  position: relative;
+  box-shadow: inset 0 0 24px rgba(0,0,0,.9), 0 4px 12px rgba(0,0,0,.25), 0 2px 0 #fff inset;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+canvas#scope {
+  flex: 1;
+  width: 100%;
+  display: block;
+  border-radius: 4px;
+  min-height: 0;
+}
+/* BNC sockets inside screen — bottom strip */
+.bnc-strip {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 4px 0 2px;
+  flex-shrink: 0;
+}
+.bnc-item { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.bnc-lbl  { font-family:'Share Tech Mono',monospace; font-size:8px; color:#999; }
+.bnc-sock {
+  width:24px; height:24px;
+  border-radius:50%;
+  background: radial-gradient(circle at 38% 32%, #888, #333);
+  border:3px solid #777;
+  position:relative;
+  transition: border-color .2s, box-shadow .2s;
+}
+.bnc-sock::after {
+  content:'';
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:6px; height:6px;
+  border-radius:50%;
+  background:#111; border:2px solid #999;
+}
+.bnc-sock.red  { border-color:#ff4444; box-shadow:0 0 8px #ff444488; }
+.bnc-sock.black{ border-color:#aaa;    box-shadow:0 0 6px #aaaaaa55; }
+
+/* Controls strip */
+.ctrl-strip {
+  width: 110px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ctrl-box {
+  background: #e4e8ee;
+  border-radius: 8px;
+  border: 1px solid #c0c4cc;
+  padding: 7px 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1), inset 0 1px 0 #fff;
+}
+.ctrl-box-title {
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px; color:#777;
+  text-align:center; margin-bottom:6px;
+}
+.knob-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.knob {
+  width:46px; height:46px;
+  border-radius:50%;
+  background: radial-gradient(circle at 35% 30%, #aaa, #555 65%, #333);
+  border:2px solid #888;
+  box-shadow: 0 3px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;
+  cursor:pointer;
+  touch-action:none;
+  user-select:none;
+}
+.knob:active { box-shadow:0 1px 3px rgba(0,0,0,.4); }
+.knob-mark {
+  position:absolute; top:5px; left:50%;
+  transform:translateX(-50%);
+  width:3px; height:12px;
+  background:#00ee77; border-radius:2px;
+  box-shadow:0 0 4px #00ee77;
+}
+.knob-val {
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px; color:#007744;
+  background:#1a2a22; padding:2px 5px;
+  border-radius:3px; border:1px solid #aaa;
+  text-shadow:0 0 4px #00aa55;
+  min-width:58px; text-align:center;
+}
+.run-btn {
+  width:100%; padding:9px;
+  border-radius:7px; border:2px solid #aab0bc;
+  background:linear-gradient(180deg,#eaecf0,#d8dce4);
+  color:#007744;
+  font-family:'Share Tech Mono',monospace; font-size:12px;
+  cursor:pointer; letter-spacing:1px;
+  transition:all .2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,.15), inset 0 1px 0 #fff;
+}
+.run-btn:active { box-shadow:0 1px 2px rgba(0,0,0,.2); transform:translateY(1px); }
+.run-btn.running { color:var(--red); border-color:#cc3333; background:linear-gradient(180deg,#fde8e8,#f5d0d0); }
+.run-btn.frozen  { color:#2266aa;   border-color:#3a6a8a; background:linear-gradient(180deg,#daeaf5,#c8dded); }
+
+/* ══ ROW 2 — BOTTOM PANELS ══ */
+.bottom-row {
+  display:flex;
+  gap:5px;
+  flex:2;
+  min-height:0;
+}
+.section {
+  background:#eceef2;
+  border-radius:10px;
+  border:1px solid #c4c8d0;
+  padding:6px 8px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  overflow:hidden;
+  min-height:0;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08), inset 0 1px 0 #fff;
+}
+.sec-title {
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px; color:#999;
+  letter-spacing:1px;
+  border-bottom:1px solid #d0d4da;
+  padding-bottom:4px;
+  flex-shrink:0;
+}
+
+/* ─ Panel 1: Devices ─ */
+.dev-sec { flex:1.1; }
+.dev-list { display:flex; flex-direction:column; gap:5px; flex:1; justify-content:center; }
+.dev-card {
+  background:#f4f6fa;
+  border:2px solid #d0d4dc;
+  border-radius:7px;
+  padding:6px 8px;
+  cursor:pointer;
+  display:flex; align-items:center; gap:8px;
+  transition:all .15s;
+  flex-shrink:0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+.dev-card:active, .dev-card.selected {
+  border-color:#009955;
+  background:#e8f5ee;
+  box-shadow:0 0 8px rgba(0,153,85,.2);
+}
+.dev-icon-svg { width:28px; height:28px; flex-shrink:0; }
+.dev-info {}
+.dev-name { font-size:12px; font-weight:700; color:#222; line-height:1.2; }
+.dev-desc { font-family:'Share Tech Mono',monospace; font-size:9px; color:#888; }
+
+/* ─ Panel 2: Connection ─ */
+.conn-sec { flex:1.8; position:relative; }
+.conn-area {
+  flex:1;
+  position:relative;
+  background:#e8eaee;
+  border-radius:7px;
+  border:1px solid #c8ccd4;
+  overflow:hidden;
+  min-height:0;
+}
+#wiring { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+
+/* Device in center */
+.dev-display {
+  position:absolute;
+  top:36%; left:50%;
+  transform:translate(-50%,-50%);
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  pointer-events:none;
+}
+.dev-body {
+  background:#f4f6fa;
+  border:2px solid #c0c4cc;
+  border-radius:9px;
+  padding:7px 14px;
+  text-align:center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.1);
+}
+.dev-body-lbl { font-family:'Share Tech Mono',monospace; font-size:9px; color:#888; margin-top:3px; }
+
+/* Terminal dots */
+.term-row { display:flex; gap:36px; pointer-events:all; }
+.terminal {
+  width:22px; height:22px;
+  border-radius:50%;
+  border:3px solid #555;
+  cursor:grab;
+  position:relative;
+  transition:transform .15s;
+  touch-action:none;
+  user-select:none;
+  z-index:10;
+}
+.terminal:active { cursor:grabbing; transform:scale(1.25); }
+.terminal.pos { background:#ff3333; border-color:#ff6666; box-shadow:0 0 7px #ff333388; }
+.terminal.neg { background:#555; border-color:#999; }
+.term-lbl {
+  position:absolute; top:-14px; left:50%;
+  transform:translateX(-50%);
+  font-size:9px; font-family:'Share Tech Mono',monospace;
+  color:#aaa; white-space:nowrap;
+}
+
+/* Probe terminals at bottom */
+.probe-row {
+  position:absolute;
+  bottom:6px;
+  left:0; right:0;
+  display:flex;
+  justify-content:space-around;
+}
+.probe-term {
+  width:24px; height:24px;
+  border-radius:50%;
+  border:3px solid #aaa;
+  background:#dde0e6;
+  position:relative;
+  transition:all .2s;
+  cursor:crosshair;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.probe-term .probe-lbl {
+  position:absolute; top:-14px; left:50%;
+  transform:translateX(-50%);
+  font-size:8px; font-family:'Share Tech Mono',monospace;
+  color:#888; white-space:nowrap;
+}
+.probe-term.has-r { border-color:#ff4444; background:#ffe8e8; box-shadow:0 0 7px #ff444433; }
+.probe-term.has-b { border-color:#888;    background:#e4e4e4; box-shadow:0 0 5px #88888833; }
+
+.hint {
+  font-family:'Share Tech Mono',monospace;
+  font-size:9px; color:#444;
+  text-align:center; flex-shrink:0;
+  padding:2px 0;
+  transition:color .3s;
+}
+
+/* ─ Panel 3: Measurements ─ */
+.meas-sec { flex:1; }
+/* ── Measurements table ── */
+.meas-table {
+  width:100%; border-collapse:collapse;
+  font-family:'Share Tech Mono',monospace;
+  direction:ltr; /* الجدول كله LTR — لا تأثير للصفحة */
+}
+.meas-table td { padding:3px 2px; vertical-align:middle; }
+.td-sym  { font-size:9px;  color:#2a7a55; opacity:0.85; text-align:left;   width:28px; white-space:nowrap; }
+.td-num  { font-size:14px; color:#007744; text-shadow:none; text-align:right; width:52px; font-weight:bold; }
+.td-unit { font-size:9px;  color:#007744; opacity:0.75; text-align:left;  padding-left:3px; width:24px; }
+.td-sep  { font-size:9px;  color:#ccc; text-align:center; width:6px; }
+/* النوع — صف كامل */
+.td-type { font-size:11px; color:#007744; text-align:center; font-weight:bold; }
+/* حالة off */
+.row-off .td-num  { color:#bbb; }
+.row-off .td-unit { color:#bbb; }
+.row-off .td-type { color:#bbb; }
+/* حالة amber (DC) */
+.row-amb .td-num  { color:#996600; }
+.row-amb .td-unit { color:#996600; opacity:0.8; }
+.row-amb .td-type { color:#996600; }
+/* فاصل بين صفوف */
+.meas-table tr { border-bottom:1px solid #d8dce4; }
+
+/* Drag wire overlay */
+#drag-overlay {
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* ══ DESKTOP LAYOUT ══ */
+@media (min-width: 768px) {
+  body { touch-action: auto; }
+
+  .main {
+    flex-direction: row;
+    align-items: stretch;
+    padding: 10px 16px 12px;
+    gap: 10px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Left column: oscilloscope (screen + controls) */
+  .osc-row {
+    flex: 3;
+    flex-direction: row;
+    min-width: 0;
+  }
+
+  /* Right column: bottom panels stacked */
+  .bottom-row {
+    flex: 1.4;
+    flex-direction: column;
+    min-width: 200px;
+    max-width: 300px;
+  }
+
+  .ctrl-strip { width: 130px; }
+
+  .knob { width: 54px; height: 54px; }
+
+  .dev-card { padding: 8px 10px; }
+  .dev-name  { font-size: 13px; }
+  .dev-icon-svg { width: 32px; height: 32px; }
+
+  .meas-val  { font-size: 15px; }
+  .meas-name { font-size: 11px; }
+
+  .run-btn { font-size: 13px; padding: 11px; }
+
+  .sec-title { font-size: 10px; }
+
+  .topbar { padding: 6px 20px; }
+  .topbar-title { font-size: 13px; }
+  .topbar-sub   { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">▸ راسم اهتزاز مهبطي</div>
+  <div class="topbar-sub">PhysicLabDZ · 4AM</div>
+</div>
+
+<div class="main">
+
+  <!-- ══ ROW 1: OSCILLOSCOPE ══ -->
+  <div class="osc-row">
+
+    <div class="screen-wrap" id="screenWrap">
+      <canvas id="scope"></canvas>
+      <div class="bnc-strip">
+        <div class="bnc-item">
+          <div class="bnc-lbl">( − ) أسود</div>
+          <div class="bnc-sock" id="bncB" data-port="black"></div>
+        </div>
+        <div class="bnc-item">
+          <div class="bnc-lbl">( + ) أحمر</div>
+          <div class="bnc-sock" id="bncR" data-port="red"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-strip">
+      <div class="ctrl-box">
+        <div class="ctrl-box-title">ms/div</div>
+        <div class="knob-wrap">
+          <div class="knob" id="tk"><div class="knob-mark"></div></div>
+          <div class="knob-val" id="tv">5ms</div>
+        </div>
+      </div>
+      <div class="ctrl-box">
+        <div class="ctrl-box-title">V/div</div>
+        <div class="knob-wrap">
+          <div class="knob" id="vk"><div class="knob-mark"></div></div>
+          <div class="knob-val" id="vv">50V</div>
+        </div>
+      </div>
+      <button class="run-btn" id="runBtn" onclick="toggleRun()">▶ تشغيل</button>
+      <button class="run-btn" id="freezeBtn" onclick="toggleFreeze()">❄ تجميد</button>
+      <div class="ctrl-box" id="scrollBox" style="opacity:0.3;pointer-events:none;transition:opacity .3s;">
+        <div class="ctrl-box-title">تمرير</div>
+        <div class="knob-wrap">
+          <div class="knob" id="sk" style="border-color:#3a6a8a;">
+            <div class="knob-mark" style="background:#66bbdd;box-shadow:0 0 4px #66bbdd;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ ROW 2: BOTTOM ══ -->
+  <div class="bottom-row">
+
+    <!-- Panel 1: Devices -->
+    <div class="section dev-sec">
+      <div class="sec-title">① الجهاز</div>
+      <div class="dev-list">
+
+        <div class="dev-card" id="dev-battery" onclick="selectDevice('battery')">
+          <!-- Battery SVG -->
+          <svg class="dev-icon-svg" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="8" width="20" height="12" rx="2" stroke="#ffaa00" stroke-width="1.8" fill="#1a1200"/>
+            <rect x="22" y="11" width="4" height="6" rx="1" fill="#ffaa00"/>
+            <line x1="7" y1="14" x2="11" y2="14" stroke="#ffaa00" stroke-width="1.8"/>
+            <line x1="9" y1="12" x2="9" y2="16" stroke="#ffaa00" stroke-width="1.8"/>
+            <line x1="13" y1="14" x2="17" y2="14" stroke="#555" stroke-width="1.8"/>
+          </svg>
+          <div class="dev-info">
+            <div class="dev-name">بطارية</div>
+            <div class="dev-desc">DC · 9V</div>
+          </div>
+        </div>
+
+        <div class="dev-card" id="dev-dynamo" onclick="selectDevice('dynamo')">
+          <!-- Dynamo SVG -->
+          <svg class="dev-icon-svg" viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="14" r="9" stroke="#00ff88" stroke-width="1.8" fill="#001a0d"/>
+            <circle cx="14" cy="14" r="4" stroke="#00ff88" stroke-width="1.5" fill="none"/>
+            <line x1="14" y1="5" x2="14" y2="10" stroke="#00ff88" stroke-width="1.5"/>
+            <line x1="14" y1="18" x2="14" y2="23" stroke="#00ff88" stroke-width="1.5"/>
+            <path d="M8 10 Q10 8 12 10 Q14 12 16 10 Q18 8 20 10" stroke="#00ff88" stroke-width="1.2" fill="none"/>
+          </svg>
+          <div class="dev-info">
+            <div class="dev-name">منوّب</div>
+            <div class="dev-desc">AC · 6V · 15Hz</div>
+          </div>
+        </div>
+
+        <div class="dev-card" id="dev-outlet" onclick="selectDevice('outlet')">
+          <!-- Outlet SVG -->
+          <svg class="dev-icon-svg" viewBox="0 0 28 28" fill="none">
+            <rect x="3" y="3" width="22" height="22" rx="4" stroke="#ff4444" stroke-width="1.8" fill="#1a0000"/>
+            <rect x="9"  y="10" width="3" height="6" rx="1" fill="#ff4444"/>
+            <rect x="16" y="10" width="3" height="6" rx="1" fill="#ff4444"/>
+            <circle cx="14" cy="19" r="1.5" fill="#ff4444"/>
+          </svg>
+          <div class="dev-info">
+            <div class="dev-name">مأخذ 220V</div>
+            <div class="dev-desc">AC · 220V · 50Hz</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Panel 2: Connection -->
+    <div class="section conn-sec">
+      <div class="sec-title">② الوصل</div>
+      <div class="conn-area" id="connArea">
+        <svg id="wiring"></svg>
+
+        <!-- Device display -->
+        <div class="dev-display" id="devDisplay">
+          <div class="dev-body" id="devBody">
+            <svg id="devSvg" width="48" height="48" viewBox="0 0 48 48"></svg>
+            <div class="dev-body-lbl" id="devLbl">اختر جهازاً</div>
+          </div>
+          <div class="term-row" id="termRow" style="display:none">
+            <div class="terminal pos" id="termPos" data-pole="pos"><span class="term-lbl">+</span></div>
+            <div class="terminal neg" id="termNeg" data-pole="neg"><span class="term-lbl">−</span></div>
+          </div>
+        </div>
+
+        <!-- Probe terminals (drop targets) -->
+        <div class="probe-row">
+          <div class="probe-term" id="probeB" data-port="black">
+            <span class="probe-lbl">مدخل −</span>
+          </div>
+          <div class="probe-term" id="probeR" data-port="red">
+            <span class="probe-lbl">مدخل +</span>
+          </div>
+        </div>
+      </div>
+      <div class="hint" id="hint">اسحب من أطراف الجهاز إلى مداخل الراسم</div>
+    </div>
+
+    <!-- Panel 3: Measurements -->
+    <div class="section meas-sec">
+      <div class="sec-title">③ القياسات</div>
+      <table class="meas-table">
+        <tr id="rowType" class="row-off">
+          <td class="td-sym" colspan="3"><span class="td-type" id="mType">—</span></td>
+        </tr>
+        <tr id="rowUmax" class="row-off">
+          <td class="td-sym">Umax</td>
+          <td class="td-num" id="mUmaxN">—</td>
+          <td class="td-unit" id="mUmaxU"></td>
+        </tr>
+        <tr id="rowUeff" class="row-off">
+          <td class="td-sym">Ueff</td>
+          <td class="td-num" id="mUeffN">—</td>
+          <td class="td-unit" id="mUeffU"></td>
+        </tr>
+        <tr id="rowT" class="row-off">
+          <td class="td-sym">T</td>
+          <td class="td-num" id="mTN">—</td>
+          <td class="td-unit" id="mTU"></td>
+        </tr>
+        <tr id="rowF" class="row-off">
+          <td class="td-sym">f</td>
+          <td class="td-num" id="mFN">—</td>
+          <td class="td-unit" id="mFU"></td>
+        </tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- Drag wire live SVG -->
+<svg id="drag-overlay"></svg>
+
+<script src="script.obf.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
